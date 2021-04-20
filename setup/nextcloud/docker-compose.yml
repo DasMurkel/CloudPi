@@ -1,0 +1,62 @@
+version: "3.3"
+
+services:
+  nextcloud-db:
+    image: mariadb
+    container_name: nextcloud-db
+    command: --transaction-isolation=READ-COMMITTED --log-bin=ROW
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./db-data:/var/lib/mysql
+      - ./db-config:/config
+    environment:
+      - MYSQL_ROOT_PASSWORD=YOUR_MYSQL_ROOT_PW
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=YOUR_MYSQL_NEXTCLOUD_PW
+    networks:
+      - nextcloud-network
+    restart: unless-stopped
+
+  nextcloud-app:
+    build: .
+    container_name: nextcloud-app
+    depends_on:
+      - nextcloud-db
+    volumes:
+      - ./data:/var/www/html
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud-app.entrypoints=web"
+      - "traefik.http.routers.nextcloud-app.rule=Host(`YOUR_HOSTNAME`)"
+      - "traefik.http.middlewares.nextcloud-app-https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.nextcloud-app.middlewares=nextcloud-app-https-redirect"
+      - "traefik.http.routers.nextcloud-app-secure.entrypoints=web-secure"
+      - "traefik.http.routers.nextcloud-app-secure.rule=Host(`YOUR_HOSTNAME`)"
+      - "traefik.http.routers.nextcloud-app-secure.tls=true"
+      - "traefik.http.routers.nextcloud-app-secure.tls.certresolver=http"
+      - "traefik.http.routers.nextcloud-app-secure.service=nextcloud-app"
+      - "traefik.http.services.nextcloud-app.loadbalancer.server.port=80"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.nextcloud-app-secure.middlewares=nextcloud-dav,secHeaders@file"
+      - "traefik.http.middlewares.nextcloud-dav.replacepathregex.regex=^/.well-known/ca(l|rd)dav"
+      - "traefik.http.middlewares.nextcloud-dav.replacepathregex.replacement=/remote.php/dav/"
+    networks:
+      - nextcloud-network
+      - traefik
+    ports:
+      - 8082:80
+    environment:
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_PASSWORD=YOUR_MYSQL_NEXTCLOUD_PW
+      - MYSQL_HOST=nextcloud-db
+    restart: unless-stopped
+
+networks:
+  nextcloud-network:
+  traefik:
+    external: true
