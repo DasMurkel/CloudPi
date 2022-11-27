@@ -151,3 +151,5 @@ This setup was created using the following articles as references. I want to tha
 * https://dbtechreviews.com/2020/03/how-to-install-nextcloud-on-openmedivault-5-with-remote-access-and-ssl/
 * https://goneuland.de/traefik-v2-reverse-proxy-fuer-docker-unter-debian-10-einrichten/#5_TLS_Sicherheit_verbessern
 * https://goneuland.de/nextcloud-server-mit-docker-compose-und-traefik-installieren/
+* https://www.ssllabs.com/ssltest/
+

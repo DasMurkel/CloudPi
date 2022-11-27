@@ -2,10 +2,8 @@ version: "3.3"
 
 services:
   nextcloud-db:
-    image: mariadb
+    image: mariadb:10.9.3 # adapt to desired version
     container_name: nextcloud-db
-    # With Nextcloud 21.0.4, the --skip-innodb-read-only-compressed became necessary. See:
-    # https://techoverflow.net/2021/08/17/how-to-fix-nextcloud-4047-innodb-refuses-to-write-tables-with-row_formatcompressed-or-key_block_size/
     command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed
     volumes:
       - /etc/localtime:/etc/localtime:ro
@@ -32,20 +30,12 @@ services:
       - /etc/timezone:/etc/timezone:ro
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.nextcloud-app.entrypoints=web"
       - "traefik.http.routers.nextcloud-app.rule=Host(`YOUR_HOSTNAME`)"
-      - "traefik.http.middlewares.nextcloud-app-https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.nextcloud-app.middlewares=nextcloud-app-https-redirect"
-      - "traefik.http.routers.nextcloud-app-secure.entrypoints=web-secure"
-      - "traefik.http.routers.nextcloud-app-secure.rule=Host(`YOUR_HOSTNAME`)"
-      - "traefik.http.routers.nextcloud-app-secure.tls=true"
-      - "traefik.http.routers.nextcloud-app-secure.tls.certresolver=http"
-      - "traefik.http.routers.nextcloud-app-secure.service=nextcloud-app"
-      - "traefik.http.services.nextcloud-app.loadbalancer.server.port=80"
+      - "traefik.http.routers.nextcloud-app.entrypoints=https"
+      - "traefik.http.routers.nextcloud-app.tls.certresolver=le"
+      - "traefik.http.routers.nextcloud-app.tls=true"
       - "traefik.docker.network=traefik"
-      - "traefik.http.routers.nextcloud-app-secure.middlewares=nextcloud-dav,secHeaders@file"
-      - "traefik.http.middlewares.nextcloud-dav.replacepathregex.regex=^/.well-known/ca(l|rd)dav"
-      - "traefik.http.middlewares.nextcloud-dav.replacepathregex.replacement=/remote.php/dav/"
+      - "traefik.http.routers.nextcloud-app.middlewares=secHeaders@file"
     networks:
       - nextcloud-network
       - traefik

@@ -1,0 +1,41 @@
+log:
+  level: INFO
+  # DEBUG for debug, INFO for production
+
+api:
+  insecure: true
+
+#accessLog:
+#  filePath: "/access.log"
+#  bufferingSize: 100
+#  format: json
+
+providers:
+  docker:
+    exposedByDefault: false
+    watch: true
+  file:
+    filename: "./dynamic_conf.yml"
+    watch: true
+
+entryPoints:
+  http:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: "https"
+          scheme: "https"
+
+  https:
+    address: ":443"
+    http:
+      tls:
+        certResolver: le
+
+certificatesResolvers:
+  le:
+    acme:
+      tlschallenge: {}
+      email: YOUR_MAIL_ADDRESS
+      storage: /letsencrypt/acme.json

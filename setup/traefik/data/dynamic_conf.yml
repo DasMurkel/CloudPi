@@ -1,3 +1,4 @@
+
 tls:
   options:
     default:
@@ -23,7 +24,6 @@ http:
         browserXssFilter: true
         contentTypeNosniff: true
         frameDeny: true
-        sslRedirect: true
         #HSTS Configuration
         stsIncludeSubdomains: true
         stsPreload: true

@@ -2,30 +2,9 @@ version: "3.3"
 
 services:
   traefik:
-    image: "traefik:latest"
+    image: "traefik:2.9.5"
     container_name: "traefik"
-    command:
-      # Only for development environment
-      - "--log.level=INFO"
-      - "--api.insecure=true"
-      # Get Docker as the provider
-      - "--providers.docker=true"
-      # Avoid that all containers are exposed
-      - "--providers.docker.exposedbydefault=false"
-      - "--providers.docker.watch=true"
-      - "--providers.file=true"
-      - "--providers.file.filename=dynamic_conf.yml"
-      # Settle the ports for the entry points
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.web-secure.address=:443"
-      # Settle the autentification method to http challenge
-      - "--certificatesresolvers.myhttpchallenge.acme.httpchallenge=true"
-      - "--certificatesresolvers.myhttpchallenge.acme.httpchallenge.entrypoint=web"
-      # Uncomment this to get a fake certificate when testing
-      #- "--certificatesresolvers.myhttpchallenge.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      # Settle letsencrypt as the certificate provider
-      - "--certificatesresolvers.myhttpchallenge.acme.email=YOUR_MAIL_ADDRESS"
-      - "--certificatesresolvers.myhttpchallenge.acme.storage=acme.json"
+    # Config implicitly loaded from /etc/traefic/traefic.yml
     ports:
       - "80:80"
       - "443:443"
@@ -36,8 +15,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
-      - ./data/acme.json:/acme.json
+      - ./letsencrypt:/letsencrypt
       - ./data/dynamic_conf.yml:/dynamic_conf.yml
+      - ./data/traefik.yml:/etc/traefik/traefik.yml
+      - ./data/access.log:/access.log
     labels:
       - "providers.file.filename=/dynamic_conf.yml"
     restart: unless-stopped
@@ -51,16 +32,9 @@ services:
       - "traefik.enable=true"
       # Get the routes from http
       - "traefik.http.routers.inner-whoami.rule=Host(`YOUR_HOSTNAME`) && Path(`/whoami`)"
-      - "traefik.http.routers.inner-whoami.entrypoints=web"
-      # Redirect these routes to https
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-      - "traefik.http.routers.inner-whoami.middlewares=redirect-to-https@docker"
-      # Get the routes from https
-      - "traefik.http.routers.inner-whoami-secured.rule=Host(`YOUR_HOSTNAME`) && Path(`/whoami`)"
-      - "traefik.http.routers.inner-whoami-secured.entrypoints=web-secure"
-      # Apply autentificiation with http challenge
-      - "traefik.http.routers.inner-whoami-secured.tls=true"
-      - "traefik.http.routers.inner-whoami-secured.tls.certresolver=myhttpchallenge"
+      - "traefik.htto.routers.inner-whoami.entrypoints=https"
+      - "traefik.http.routers.inner-whoami.tls=true"
+      - "traefik.http.routers.inner-whoami.tls.certresolver=le"
     restart: unless-stopped
 
 # Network must be manually created with local IPv6 prefix
