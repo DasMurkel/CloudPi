@@ -2,14 +2,14 @@ version: "3.3"
 
 services:
   nextcloud-db:
-    image: mariadb:10.9.3 # adapt to desired version
+    image: mariadb:10.11.2
     container_name: nextcloud-db
     command: --transaction-isolation=READ-COMMITTED --log-bin=ROW --skip-innodb-read-only-compressed
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ./db-data:/var/lib/mysql
-      - ./db-config:/config
+      - ../db-data:/var/lib/mysql
+      - ../db-config:/config
     environment:
       - MYSQL_ROOT_PASSWORD=YOUR_MYSQL_ROOT_PW
       - MYSQL_DATABASE=nextcloud
@@ -25,7 +25,7 @@ services:
     depends_on:
       - nextcloud-db
     volumes:
-      - ./data:/var/www/html
+      - ../data:/var/www/html
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     labels:
